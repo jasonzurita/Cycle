@@ -1,0 +1,45 @@
+# iOS CircleCI 2.0 configuration file
+# https://circleci.com/docs/2.0/configuration-reference/#section=configuration
+#
+version: 2
+common-setup: &common-setup
+    macos:
+      xcode: "11.2.1"
+    shell: /bin/bash --login -eo pipefail
+
+jobs:
+  lint-danger:
+    <<: *common-setup
+    steps:
+      - run:
+          name: Set Ruby Version
+          command: echo "ruby-2.6" > ~/.ruby-version
+      - checkout
+      - restore_cache:
+          keys:
+            - v1-gems-{{ checksum "Gemfile.lock" }}
+            - v1-gems-
+      - run:
+          name: Bundle install
+          command: bundle install
+          environment:
+            BUNDLE_PATH: vendor/bundle
+      - save_cache:
+          key: v1-gems-{{ checksum "Gemfile.lock" }}
+          paths:
+            - vendor/bundle
+      - run:
+          name: Run Dangerfile
+          command: bundle exec danger
+          environment:
+            BUNDLE_PATH: vendor/bundle
+    
+workflows:
+  version: 2
+
+  commit-workflow:
+    jobs:
+      - lint-danger:
+          filters:
+            branches:
+              ignore: master
