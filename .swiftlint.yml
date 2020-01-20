@@ -1,0 +1,17 @@
+# Rule explanations: https://github.com/realm/SwiftLint/blob/master/Rules.md
+#
+disabled_rules: # rule identifiers to exclude from running
+  - todo
+  - vertical_parameter_alignment
+  - identifier_name
+
+opt_in_rules:
+  - empty_count
+  - contains_over_first_not_nil
+
+trailing_comma:
+  mandatory_comma: true 
+
+force_cast: warning
+
+force_try: warning
