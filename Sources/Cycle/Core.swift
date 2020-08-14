@@ -7,7 +7,7 @@ public final class Store<Value, Action>: ObservableObject {
     private let reducer: Reducer<Value, Action>
     @Published public private(set) var value: Value
     private var viewCancellable: Cancellable?
-    private var effectCancellers: Set<AnyCancellable> = []
+    private var effectCancellers: [UUID: AnyCancellable] = [:]
 
     public init(initialValue: Value, reducer: @escaping Reducer<Value, Action>) {
         self.reducer = reducer
@@ -19,16 +19,16 @@ public final class Store<Value, Action>: ObservableObject {
         effects.forEach { effect in
             var canceller: AnyCancellable?
             var didComplete = false
+            let uuid = UUID()
             canceller = effect.sink(
                 receiveCompletion: { [weak self] _ in
                     didComplete = true
-                    guard let c = canceller else { return }
-                    self?.effectCancellers.remove(c)
+                    self?.effectCancellers[uuid] = nil
             },
                 receiveValue: self.send
             )
-            if !didComplete, let c = canceller {
-                effectCancellers.insert(c)
+            if !didComplete {
+                effectCancellers[uuid] = canceller
             }
         }
     }
