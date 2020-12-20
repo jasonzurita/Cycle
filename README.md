@@ -1,6 +1,6 @@
 # Cycle
 
-A lightweight unidirectional flow architecture for Swift & SwiftUI applications based on learnings from [PointFree](https://www.pointfree.co).
+A lightweight unidirectional flow architecture (similar to the Elm Architecture and Redux) for Swift & SwiftUI applications based on learnings from [PointFree](https://www.pointfree.co).
 
 ---
 
