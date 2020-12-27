@@ -14,6 +14,9 @@ let package = Package(
         .library(
             name: "Cycle",
             targets: ["Cycle"]),
+        .library(
+            name: "CycleTestSupport",
+            targets: ["CycleTestSupport"]),
     ],
     dependencies: [],
     targets: [
@@ -22,6 +25,9 @@ let package = Package(
             dependencies: []),
         .testTarget(
             name: "CycleTests",
+            dependencies: ["Cycle"]),
+        .target(
+            name: "CycleTestSupport",
             dependencies: ["Cycle"]),
     ]
 )

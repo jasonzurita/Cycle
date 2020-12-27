@@ -1,6 +1,7 @@
 #if !os(watchOS)
 import Combine
 import XCTest
+import Cycle
 
 public enum StepType<Action> {
     case send(Action)
