@@ -18,18 +18,19 @@ public struct Step<Value, Action> {
         file: StaticString = #filePath,
         line: UInt = #line,
         _ type: StepType<Action>,
-        delta: @escaping (inout Value) -> Void
+        update expectedStateChange: @escaping (inout Value) -> Void = { _ in }
     ) {
         self.file = file
         self.line = line
         self.type = type
-        self.update = delta
+        self.update = expectedStateChange
     }
 }
 
-public func assert<Value: Equatable, Action: Equatable>(
+public func assert<Value: Equatable, Action: Equatable,  Environment>(
     initialValue: Value,
-    reducer: (inout Value, Action) -> [Effect<Action>],
+    reducer: (inout Value, Action, Environment) -> [Effect<Action>],
+    environment: Environment,
     steps: Step<Value, Action>...,
     file: StaticString = #filePath,
     line: UInt = #line
@@ -47,7 +48,7 @@ public func assert<Value: Equatable, Action: Equatable>(
                 XCTFail("Action sent before handling \(effects.count) pending effect(s).", file: file, line: line)
                 return
             }
-            effects.append(contentsOf: reducer(&value, stepAction))
+            effects.append(contentsOf: reducer(&value, stepAction, environment))
         case let .receive(stepAction):
             guard !effects.isEmpty else {
                 XCTFail("No pending effects to receive", file: file, line: line)
@@ -67,7 +68,7 @@ public func assert<Value: Equatable, Action: Equatable>(
             }
             XCTAssertEqual(action, stepAction, file: step.file, line: step.line)
             if let a = action {
-                effects.append(contentsOf: reducer(&value, a))
+                effects.append(contentsOf: reducer(&value, a,  environment))
             }
         case .receiveFireAndForget:
             guard !effects.isEmpty else {

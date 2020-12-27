@@ -2,18 +2,24 @@ import Foundation
 import Combine
 
 public final class Store<Value, Action>: ObservableObject {
-    private let reducer: Reducer<Value, Action>
+    private let reducer: Reducer<Value, Action, Any>
     @Published public private(set) var value: Value
+    private let environment: Any
     private var viewCancellable: Cancellable?
     private var effectCancellers: [UUID: AnyCancellable] = [:]
 
-    public init(initialValue: Value, reducer: @escaping Reducer<Value, Action>) {
-        self.reducer = reducer
+    public init<Environment>(initialValue: Value,
+                reducer: @escaping Reducer<Value, Action, Environment>,
+                environment: Environment) {
+        self.reducer = { value, action, environment in
+            reducer(&value, action, environment as! Environment)
+        }
         value = initialValue
+        self.environment = environment
     }
 
     public func send(_ action: Action) {
-        let effects = self.reducer(&self.value, action)
+        let effects = self.reducer(&self.value, action, environment)
         effects.forEach { effect in
             var canceller: AnyCancellable?
             var didComplete = false
@@ -37,11 +43,11 @@ public final class Store<Value, Action>: ObservableObject {
     ) -> Store<LocalValue, LocalAction> {
         let localStore = Store<LocalValue, LocalAction>(
             initialValue: toLocalValue(value),
-            reducer: { localValue, localAction in
+            reducer: { localValue, localAction, environment in
                 self.send(toGlobalAction(localAction))
                 localValue = toLocalValue(self.value)
                 return []
-            }
+            }, environment: self.environment
         )
         localStore.viewCancellable = self.$value.sink { [weak localStore] newValue in
             localStore?.value = toLocalValue(newValue)
